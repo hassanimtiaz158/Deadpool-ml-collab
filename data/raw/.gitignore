@@ -1,0 +1,2 @@
+# Cache the local virtualenv used by this project.
+venv/

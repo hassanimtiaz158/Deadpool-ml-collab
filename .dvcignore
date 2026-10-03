@@ -1,0 +1,25 @@
+# Paths DVC should never try to track.
+# Learn more: https://dvc.org/doc/user-guide/dvcignore
+
+# Caches and locks are managed by DVC itself.
+.dvc/cache/
+.dvc/tmp/
+.dvc/.gitignore
+.dvc/config.local
+
+# Git metadata
+.git/
+.github/
+
+# Environments and local state
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# The raw archive is a single .dvc-managed file; intermediates are pipeline
+# outputs declared in dvc.yaml and must not be re-discovered by `dvc add`.
+data/interim/
+data/processed/
