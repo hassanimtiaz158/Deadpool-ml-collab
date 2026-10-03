@@ -4,18 +4,80 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "fruit_classification"
-version = "0.0.1"
-description = "A short description of the project."
-authors = [
-  { name = "malik" },
-]
-
+version = "0.1.0"
+description = "Collaborative MLOps project: 266-way fruit image classification on Fruits-360 (100x100)."
+authors = [{ name = "malik" }]
 readme = "README.md"
 classifiers = [
-    "Programming Language :: Python :: 3",
-    
+  "Programming Language :: Python :: 3",
+  "Intended Audience :: Science/Research",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
-requires-python = "~=3.10.0"
+requires-python = ">=3.10"
+
+dependencies = [
+  "numpy>=1.26",
+  "pandas>=2.1",
+  "pillow>=10.0",
+  "scikit-learn>=1.3",
+  "scipy>=1.11",
+  "matplotlib>=3.7",
+  "seaborn>=0.13",
+  "pyyaml>=6.0",
+  "joblib>=1.3",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=7.4",
+  "pytest-cov>=4.1",
+  "ruff>=0.14.2",
+  "pre-commit>=3.5",
+  "nbformat>=5.9",
+  "nbclient>=0.8",
+  "jupytext>=1.16",
+  "ipykernel>=6.25",
+]
+pipeline = ["dvc>=3.0", "dvc[s3]>=3.0"]
+
+[project.urls]
+Homepage = "https://github.com/hassanimtiaz158/Deadpool-ml-collab"
+Issues = "https://github.com/hassanimtiaz158/Deadpool-ml-collab/issues"
+
+[tool.flit.module]
+name = "fruit_classification"
+
+[tool.flit.sdist]
+include = ["src/", "tests/", "params.yaml", "dvc.yaml"]
+
+# ---------------------------------------------------------------- tooling ---
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra --strict-markers"
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.ruff]
+line-length = 99
+target-version = "py310"
+src = ["src", "tests"]
+extend-exclude = [".dvc", "venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM"]
+ignore = [
+  "E501",    # long lines are handled by the formatter
+  "B008",
+  "SIM108",  # ternary rewrites hurt readability in the feature code
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]
+
+[tool.ruff.format]
+docstring-code-format = true
 
 [tool.black]
 line-length = 99
@@ -31,5 +93,3 @@ exclude = '''
 profile = "black"
 known_first_party = ["fruit_classification"]
 force_sort_within_sections = true
-
-
