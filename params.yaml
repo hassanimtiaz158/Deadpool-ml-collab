@@ -1,0 +1,41 @@
+﻿# Fruit classification - pipeline parameters.
+# Every value that affects a result lives here; nothing is hardcoded in src/.
+# Sweep with:  dvc exp run --set-param train.max_iter=40
+
+seed: 42
+
+cache_tag: full          # filenames under data/interim/ for the cached features
+
+data:
+  zip: data/raw/fruits-360_100x100.zip
+
+split:
+  test_size: 0.2         # validation split carved out of the Training folder
+  stratify: true
+  # the archive's own Test folder is kept untouched as the final test set
+
+features:
+  image_size: 32         # resize 100x100 source images to 32x32 before featurising
+  hog_cells: 4           # 4x4 spatial cells for the HOG descriptor
+  hog_bins: 9            # unsigned orientation bins
+  color_hist: true       # append an 8x4x4 HSV histogram (128 dims)
+
+train:
+  model: sgd_svm          # sgd_svm | logistic_regression | linear_svc
+                         # random_forest | extra_trees | mlp
+  alpha: 1.0e-5          # sgd_svm / mlp regularisation
+  max_iter: 25           # epochs for sgd_svm
+  tol: 1.0e-4
+  C: 1.0                 # C for logistic_regression / linear_svc
+  n_estimators: 200      # tree ensembles
+  max_depth: null
+  hidden_layer_sizes: [256]
+  early_stopping: true
+  n_iter_no_change: 5
+  scale_features: false
+  n_jobs: -1
+
+runtime:
+  n_jobs: -1             # feature extraction worker processes
+  max_images_per_class: null   # set an int to subsample (smoke runs)
+  classes_limit: null          # set an int to keep only the first N label_ids
