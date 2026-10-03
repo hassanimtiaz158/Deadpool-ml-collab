@@ -95,12 +95,14 @@ it actually reads, so `dvc repro` re-runs the minimum necessary.
 | `train` | cached features, `models.py`, `train.py` | `models/model.joblib` |
 | `evaluate` | trained model, cached features | `reports/metrics.json`, `reports/per_class_metrics.csv`, confusion matrix |
 
-> **The feature cache is an intermediate, not a deliverable.** It is declared with
-> `persist: false`, so it is never pushed to the DagsHub remote — it is fully
-> derived from the raw archive plus `features.py`, and versioning it would add
-> ~180 MB to every push for no benefit.
+> **The feature cache is an intermediate, not a deliverable** — it is fully derived
+> from the raw archive plus `features.py`. It is still declared as a `dvc.yaml`
+> `out`, so `dvc push` *will* ship it (~93 MB) whenever the feature config
+> changes. DVC 3.67 rejects `persist: false` in `dvc.yaml`, so there is no way to
+> declare it as unversioned; `dvc push --target train` narrows the push if that
+> ever matters.
 >
-> The trade-off: DVC deletes a stage's outputs *before* re-running that stage, so
+> The bigger trade-off: DVC deletes a stage's outputs *before* re-running that stage, so
 > changing anything in `prepare`'s `deps` (including editing `dvc.yaml` itself)
 > forces a full **~14 minute** re-extraction of all 188,984 images. Run
 > `dvc status` before committing a `deps` change.

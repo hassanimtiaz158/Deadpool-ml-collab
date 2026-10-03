@@ -26,7 +26,7 @@ stages:
     outs:
       # The feature cache is derived entirely from the raw archive + features.py,
       # so it needs no versioning of its own - but dvc.yaml outs are always
-      # pushed, so `dvc push` will ship ~180 MB whenever the feature config
+      # pushed, so `dvc push` will ship ~93 MB whenever the feature config
       # changes. `dvc push --target <stage>` narrows that if it becomes a
       # problem.
       #

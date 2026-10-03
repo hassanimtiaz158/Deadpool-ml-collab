@@ -186,7 +186,7 @@ NumPy + Pillow so it has no platform-specific dependencies:
 
 Decoding 188,984 JPEGs dominates the runtime. `prepare` decodes each image
 **once** and caches the 272-d vectors to `data/interim/full_features.npz`
-(~180 MB compressed). Every experiment after that costs only the fit time —
+(93 MB). Every experiment after that costs only the fit time —
 roughly a **14× speedup** over re-decoding the archive for each candidate.
 
 Implementation detail worth recording: the extraction workers keep the `ZipFile`
@@ -435,10 +435,10 @@ even though `sgd_svm` is still the reference point the tree model has to beat.
 * **Changing a stage's `deps` silently cost 14 minutes.** DVC deletes a stage's
   outputs *before* re-running it. Editing the `prepare` stage's dependency from
   the `.dvc` pointer to the data file (the correct idiom) therefore wiped a
-  180 MB feature cache and forced a full re-extraction of all 188,984 images.
+  93 MB feature cache and forced a full re-extraction of all 188,984 images.
   Nothing warned about it. `dvc status` is now called out in the README before any
   `deps` change, and we attempted `persist: false` to keep the cache out of the
-  remote — DVC 3.67 rejects that key in `dvc.yaml`, so the ~180 MB push is a known
+  remote — DVC 3.67 rejects that key in `dvc.yaml`, so the ~93 MB push is a known
   cost instead.
 * **The validation split flattered every model.** The 99.9 % validation macro-F1
   that selected the winning model is optimistic because the split is random and
@@ -466,7 +466,7 @@ even though `sgd_svm` is still the reference point the tree model has to beat.
 | `linear_svc`, `logistic_regression`, `mlp` not benchmarked to completion | The leaderboard covers the linear family plus one tree ensemble, not all eight candidates | Documented in `compare.py`; available via `--models` |
 | Near-duplicate frames can straddle the validation split | Validation macro-F1 (99.9 %) is optimistic; the `Test` figure (98.0 %) is the one to quote | Open — see Finding 4 |
 | Validation vs test gap (99.9 % → 98.0 %) | Reflects both intra-`Training` frame repetition and a real domain shift between capture sessions | Documented — Findings 3 and 4 |
-| `data/interim/full_features.npz` (~180 MB) is a DVC stage output | Every feature-config change pushes ~180 MB to DagsHub | Known cost — `persist: false` is rejected by DVC 3.67 in `dvc.yaml` |
+| `data/interim/full_features.npz` (93 MB) is a DVC stage output | Every feature-config change pushes ~93 MB to DagsHub | Known cost — `persist: false` is rejected by DVC 3.67 in `dvc.yaml` |
 | `random_forest (100)` not benchmarked to completion | Killed after 41 min CPU; `extra_trees` already dominated it | Accepted — tree-ensemble family is represented |
 | Pre-commit hook environments not installed on the authoring machine | Commits in this branch were made with `--no-verify`; the config itself is correct | Open — `pre-commit install --install-hooks` on a machine with working network |
 | `notebooks/*.ipynb` twins not committed | `jupytext` could not be installed (pip downloads failed on the available network), so only the `.py` percent sources are committed | Open — run `jupytext --to ipynb notebooks/*.py` on a connected machine; the `.py` files are the source of truth and diff/merge cleanly, which is the point of the pairing |
