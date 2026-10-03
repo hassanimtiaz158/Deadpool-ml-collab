@@ -1,0 +1,5 @@
+outs:
+- md5: 0fdda4fa2379b031a254acf920227092
+  size: 753765
+  hash: md5
+  path: sample.zip
