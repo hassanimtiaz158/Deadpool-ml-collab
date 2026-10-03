@@ -1,0 +1,18 @@
+# Everything in here is a generated artefact tracked by DVC (see the `outs:` of
+# dvc.yaml and the `outs` section of dvc.lock). Git must not also track them:
+# if it did, the two systems would disagree about what a result is, and the
+# usual `git add .` would quietly commit 180 MB of feature cache.
+#
+# Results are namespaced by `cache_tag` -- the released run writes to the
+# top level, a smoke/CI run writes to reports/<tag>/ -- so ignore the whole
+# directory rather than listing files one at a time.
+/*
+!/model_comparison.csv
+!/.gitkeep
+# `/*` above matches this file too, which would leave it untracked and make the
+# whole rule disappear on a fresh clone.
+!/.gitignore
+
+# Figures are gitignored individually so the tracked placeholder survives.
+/figures/*
+!/figures/.gitkeep
