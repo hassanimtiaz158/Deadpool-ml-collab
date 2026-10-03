@@ -19,7 +19,18 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 
-# The raw archive is a single .dvc-managed file; intermediates are pipeline
-# outputs declared in dvc.yaml and must not be re-discovered by `dvc add`.
-data/interim/
-data/processed/
+# Build/tooling artefacts
+.ruff_cache/
+.hypothesis/
+*.egg-info/
+build/
+dist/
+
+# DVC's own report HTML and log files
+.dvc/reports/
+dvc.log
+
+# NOTE: data/interim/ and data/processed/ are deliberately *not* ignored here.
+# They are declared as stage outputs in dvc.yaml, and DVC refuses to run a stage
+# whose outputs its own .dvcignore excludes. Re-discovery by `dvc add` is
+# already prevented because those paths are owned by a stage.

@@ -1,0 +1,78 @@
+# Reproducible pipeline: prepare -> train -> evaluate
+#
+#   dvc repro            # run every stage
+#   dvc repro evaluate   # re-run only what changed
+#   dvc exp run --set-param train.max_iter=40
+#
+# Every stage reads params.yaml and every random process is seeded from
+# `seed`, so a fresh clone + `dvc pull` + `dvc repro` reproduces metrics.json.
+
+stages:
+  prepare:
+    cmd: python -m fruit_classification.prepare
+    deps:
+      - src/fruit_classification/features.py
+      - src/fruit_classification/dataset.py
+      - src/fruit_classification/prepare.py
+      - params.yaml
+      # Depend on the data file, not its .dvc pointer - DVC resolves the hash
+      # through the pointer, so the 847 MB archive is never re-hashed.
+      - data/raw/fruits-360_100x100.zip
+    params:
+      - seed
+      - features
+      - runtime
+      - cache_tag
+    outs:
+      # The feature cache is derived entirely from the raw archive + features.py,
+      # so it needs no versioning of its own - but dvc.yaml outs are always
+      # pushed, so `dvc push` will ship ~180 MB whenever the feature config
+      # changes. `dvc push --target <stage>` narrows that if it becomes a
+      # problem.
+      #
+      # Cost worth knowing: DVC removes a stage's outputs BEFORE re-running that
+      # stage, so any change to `deps` above (including editing this file)
+      # forces a full ~14 min re-extraction of all 188,984 images. Run
+      # `dvc status` before committing a deps change.
+      - data/interim/full_features.npz
+      - data/interim/full_index.csv
+      - data/interim/full_manifest.json
+
+  train:
+    cmd: python -m fruit_classification.modeling.train
+    deps:
+      - src/fruit_classification/config.py
+      - src/fruit_classification/prepare.py
+      - src/fruit_classification/modeling/models.py
+      - src/fruit_classification/modeling/train.py
+      - data/interim/full_features.npz
+      - params.yaml
+    params:
+      - seed
+      - split
+      - train
+      - runtime.n_jobs
+      - cache_tag
+    outs:
+      - models/model.joblib
+
+  evaluate:
+    cmd: python -m fruit_classification.modeling.evaluate
+    deps:
+      - src/fruit_classification/config.py
+      - src/fruit_classification/dataset.py
+      - src/fruit_classification/modeling/evaluate.py
+      - models/model.joblib
+      - data/interim/full_features.npz
+      - params.yaml
+    params:
+      - seed
+      - split
+      - features
+      - train
+      - cache_tag
+    outs:
+      - reports/metrics.json
+      - reports/per_class_metrics.csv
+      - reports/figures/confusion_matrix.npy
+      - reports/figures/confusion_matrix_labels.json
