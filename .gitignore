@@ -7,10 +7,13 @@ data/raw/*.zip
 data/raw/sample.zip
 data/interim/*
 !data/interim/.gitkeep
+!data/interim/.gitignore
 data/processed/*
 !data/processed/.gitkeep
+!data/processed/.gitignore
 models/*
 !models/.gitkeep
+!models/.gitignore
 .dvc/cache/
 .dvc/tmp/
 mlruns/

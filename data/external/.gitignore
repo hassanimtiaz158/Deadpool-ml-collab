@@ -1,0 +1,5 @@
+# Third-party datasets downloaded by hand. Tracked with DVC if kept, ignored
+# otherwise - never committed to Git.
+*
+!.gitkeep
+!.gitignore

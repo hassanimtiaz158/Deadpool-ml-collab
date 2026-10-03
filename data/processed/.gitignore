@@ -1,0 +1,4 @@
+# Canonical modelling tables are pipeline outputs, never committed to Git.
+*
+!.gitkeep
+!.gitignore

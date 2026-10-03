@@ -1,0 +1,4 @@
+# Trained models are DVC artefacts, never committed to Git.
+*
+!.gitkeep
+!.gitignore
