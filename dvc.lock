@@ -1,0 +1,177 @@
+schema: '2.0'
+stages:
+  prepare:
+    cmd: python -m fruit_classification.prepare
+    deps:
+    - path: data/raw/fruits-360_100x100.zip
+      hash: md5
+      md5: fd6de979f85a2bc73782d760c966fd6b
+      size: 847218361
+    - path: params.yaml
+      hash: md5
+      md5: 618d072cca7d64032ef595d28ab946d0
+      size: 2030
+    - path: src/fruit_classification/dataset.py
+      hash: md5
+      md5: bc0e03d807f3ab2238145390bf3be247
+      size: 8529
+    - path: src/fruit_classification/features.py
+      hash: md5
+      md5: 5eba99b574cbd29ef31959a7d62bf2e0
+      size: 5971
+    - path: src/fruit_classification/prepare.py
+      hash: md5
+      md5: 8a93340f95d8b2b76dbfd7a9e8ea2bb1
+      size: 5304
+    params:
+      params.yaml:
+        cache_tag: full
+        features:
+          image_size: 32
+          hog_cells: 4
+          hog_bins: 9
+          color_hist: true
+        runtime:
+          n_jobs: -1
+          max_images_per_class:
+          classes_limit:
+        seed: 42
+    outs:
+    - path: data/interim/full_features.npz
+      hash: md5
+      md5: 2cf68d3f8b72855e95c7f40dc234ee5b
+      size: 97843929
+    - path: data/interim/full_index.csv
+      hash: md5
+      md5: ad91238319ce77b1b64b13d0591bd4ab
+      size: 13113058
+    - path: data/interim/full_manifest.json
+      hash: md5
+      md5: e8fa4b495d4d120c0b95f5dcd505bdb8
+      size: 462
+  train:
+    cmd: python -m fruit_classification.modeling.train
+    deps:
+    - path: data/interim/full_features.npz
+      hash: md5
+      md5: 2cf68d3f8b72855e95c7f40dc234ee5b
+      size: 97843929
+    - path: params.yaml
+      hash: md5
+      md5: 618d072cca7d64032ef595d28ab946d0
+      size: 2030
+    - path: src/fruit_classification/config.py
+      hash: md5
+      md5: 69fe42b06d9a20b680f7165530ef6de1
+      size: 4301
+    - path: src/fruit_classification/modeling/models.py
+      hash: md5
+      md5: a81e5cb5f45b0304ea33fcacb0476606
+      size: 2682
+    - path: src/fruit_classification/modeling/train.py
+      hash: md5
+      md5: 18f784e3aaeca609adcf046e173f0155
+      size: 5266
+    - path: src/fruit_classification/prepare.py
+      hash: md5
+      md5: 8a93340f95d8b2b76dbfd7a9e8ea2bb1
+      size: 5304
+    params:
+      params.yaml:
+        cache_tag: full
+        runtime.n_jobs: -1
+        seed: 42
+        split:
+          test_size: 0.2
+          stratify: true
+        train:
+          model: extra_trees
+          alpha: 1e-06
+          max_iter: 60
+          tol: 0.0001
+          C: 1.0
+          n_estimators: 100
+          max_depth:
+          min_samples_leaf: 1
+          hidden_layer_sizes:
+          - 256
+          early_stopping: true
+          n_iter_no_change: 5
+          scale_features: false
+          n_jobs: -1
+    outs:
+    - path: models/model.joblib
+      hash: md5
+      md5: c7765e2a5fdb2a2bba893d607036171a
+      size: 124028052
+  evaluate:
+    cmd: python -m fruit_classification.modeling.evaluate
+    deps:
+    - path: data/interim/full_features.npz
+      hash: md5
+      md5: 2cf68d3f8b72855e95c7f40dc234ee5b
+      size: 97843929
+    - path: models/model.joblib
+      hash: md5
+      md5: c7765e2a5fdb2a2bba893d607036171a
+      size: 124028052
+    - path: params.yaml
+      hash: md5
+      md5: 618d072cca7d64032ef595d28ab946d0
+      size: 2030
+    - path: src/fruit_classification/config.py
+      hash: md5
+      md5: 69fe42b06d9a20b680f7165530ef6de1
+      size: 4301
+    - path: src/fruit_classification/dataset.py
+      hash: md5
+      md5: bc0e03d807f3ab2238145390bf3be247
+      size: 8529
+    - path: src/fruit_classification/modeling/evaluate.py
+      hash: md5
+      md5: bfa09f5dce87f15273d743eecd2cd121
+      size: 7763
+    params:
+      params.yaml:
+        cache_tag: full
+        features:
+          image_size: 32
+          hog_cells: 4
+          hog_bins: 9
+          color_hist: true
+        seed: 42
+        split:
+          test_size: 0.2
+          stratify: true
+        train:
+          model: extra_trees
+          alpha: 1e-06
+          max_iter: 60
+          tol: 0.0001
+          C: 1.0
+          n_estimators: 100
+          max_depth:
+          min_samples_leaf: 1
+          hidden_layer_sizes:
+          - 256
+          early_stopping: true
+          n_iter_no_change: 5
+          scale_features: false
+          n_jobs: -1
+    outs:
+    - path: reports/figures/confusion_matrix.npy
+      hash: md5
+      md5: 41f5830aea9d8762b51186957c9ebd53
+      size: 570440
+    - path: reports/figures/confusion_matrix_labels.json
+      hash: md5
+      md5: 74c86eea767aac02461c9cbcf8f30887
+      size: 4053
+    - path: reports/metrics.json
+      hash: md5
+      md5: 817f73a4f3d8286800a092e4bb2d43ee
+      size: 2056
+    - path: reports/per_class_metrics.csv
+      hash: md5
+      md5: c7ab4a4ba564671a66d6c23ed9b553bd
+      size: 11094
