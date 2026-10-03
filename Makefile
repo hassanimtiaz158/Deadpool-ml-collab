@@ -1,83 +1,166 @@
+.PHONY: help requirements create_environment clean lint format test \
+        data data-push index check prepare train evaluate repro smoke \
+        notebooks dvc-status dvc-pull dvc-push exp-show experiments release-check
+
 #################################################################################
 # GLOBALS                                                                       #
 #################################################################################
 
-PROJECT_NAME = fruit_classification
+PROJECT_NAME  = fruit_classification
 PYTHON_VERSION = 3.10
-PYTHON_INTERPRETER = python
+VENV          = venv
+PY            = $(VENV)/Scripts/python.exe
+PIP           = $(VENV)/Scripts/pip.exe
+
+# On non-Windows shells fall back to the ambient interpreter.
+ifeq ($(OS),Windows_Nt)
+    PY  = $(VENV)/Scripts/python.exe
+    PIP = $(VENV)/Scripts/pip.exe
+else
+    PY  = python3
+    PIP = $(VENV)/bin/pip
+endif
+
+export PYTHONPATH := src
+
 
 #################################################################################
-# COMMANDS                                                                      #
+# ENVIRONMENT                                                                    #
 #################################################################################
 
-
-## Install Python dependencies
 .PHONY: requirements
 requirements:
-	$(PYTHON_INTERPRETER) -m pip install -U pip
-	$(PYTHON_INTERPRETER) -m pip install -r requirements.txt
-	
+	$(PIP) install -U pip
+	$(PIP) install -r requirements.txt
+	$(PIP) install -e ".[dev,pipeline]"
 
-
-
-## Delete all compiled Python files
-.PHONY: clean
-clean:
-	find . -type f -name "*.py[co]" -delete
-	find . -type d -name "__pycache__" -delete
-
-
-## Lint using flake8, black, and isort (use `make format` to do formatting)
-.PHONY: lint
-lint:
-	flake8 fruit_classification
-	isort --check --diff fruit_classification
-	black --check fruit_classification
-
-## Format source code with black
-.PHONY: format
-format:
-	isort fruit_classification
-	black fruit_classification
-
-
-
-
-
-## Set up Python interpreter environment
 .PHONY: create_environment
 create_environment:
-	@bash -c "if [ ! -z `which virtualenvwrapper.sh` ]; then source `which virtualenvwrapper.sh`; mkvirtualenv $(PROJECT_NAME) --python=$(PYTHON_INTERPRETER); else mkvirtualenv.bat $(PROJECT_NAME) --python=$(PYTHON_INTERPRETER); fi"
-	@echo ">>> New virtualenv created. Activate with:\nworkon $(PROJECT_NAME)"
-	
+	python -m venv $(VENV)
+	$(MAKE) requirements
 
+.PHONY: clean
+clean:
+	find . -type f -name "*.py[co]" -not -path "./$(VENV)/*" -delete
+	find . -type d -name "__pycache__" -not -path "./$(VENV)/*" -exec rm -rf {} +
+	rm -rf .pytest_cache .ruff_cache reports/data_checks.json reports/smoke_metrics.json
+
+.PHONY: lint
+lint:
+	ruff check src/ tests/
+	ruff format --check src/ tests/
+
+.PHONY: format
+format:
+	ruff check --fix src/ tests/
+	ruff format src/ tests/
+
+.PHONY: test
+test:
+	$(PY) -m pytest tests/ -v
 
 
 #################################################################################
-# PROJECT RULES                                                                 #
+# DATA (DVC)                                                                     #
 #################################################################################
 
+## Pull the dataset from the DagsHub DVC remote (always run before git pull).
+.PHONY: data-pull
+data-pull:
+	dvc pull
 
-## Make dataset
-.PHONY: data
-data: requirements
-	$(PYTHON_INTERPRETER) fruit_classification/dataset.py
+## Commit the current data state to Git (pointer only) and push it to the remote.
+## Order matters: dvc push MUST come before git push.
+.PHONY: data-push
+data-push:
+	dvc push
+	git push
+
+## Rebuild the committed dataset index used by the CI data checks.
+.PHONY: index
+index:
+	$(PY) -m fruit_classification.checks
+
+## Extract and cache image features from the DVC-tracked archive.
+.PHONY: prepare
+prepare:
+	$(PY) -m fruit_classification.prepare
+
+.PHONY: check
+check:
+	$(PY) -m fruit_classification.checks
 
 
 #################################################################################
-# Self Documenting Commands                                                     #
+# PIPELINE                                                                       #
+#################################################################################
+
+.PHONY: train
+train:
+	$(PY) -m fruit_classification.modeling.train
+
+.PHONY: evaluate
+evaluate:
+	$(PY) -m fruit_classification.modeling.evaluate
+
+## Reproduce the full pipeline defined in dvc.yaml.
+.PHONY: repro
+repro:
+	dvc repro
+
+## Fast end-to-end run on the small committed sample (what CI executes).
+.PHONY: smoke
+smoke:
+	$(PY) -m fruit_classification.smoke
+
+.PHONY: dvc-status
+dvc-status:
+	dvc status
+
+.PHONY: dvc-pull
+dvc-pull:
+	dvc pull
+
+
+#################################################################################
+# EXPERIMENTS                                                                    #
+#################################################################################
+
+.PHONY: experiments
+experiments:
+	dvc exp run --set-param train.max_iter=40
+	dvc exp run --set-param train.model=logistic_regression train.C=10
+	dvc exp run --set-param train.model=linear_svc train.C=0.5
+	dvc exp show
+
+.PHONY: exp-show
+exp-show:
+	dvc exp show
+
+
+#################################################################################
+# NOTEBOOKS                                                                      #
+#################################################################################
+
+.PHONY: notebooks
+notebooks:
+	$(PY) -m jupyter lab notebooks/
+
+
+#################################################################################
+# SELF-DOCUMENTING COMMANDS                                                      #
 #################################################################################
 
 .DEFAULT_GOAL := help
 
 define PRINT_HELP_PYSCRIPT
-import re, sys; \
-lines = '\n'.join([line for line in sys.stdin]); \
-matches = re.findall(r'\n## (.*)\n[\s\S]+?\n([a-zA-Z_-]+):', lines); \
-print('Available rules:\n'); \
-print('\n'.join(['{:25}{}'.format(*reversed(match)) for match in matches]))
+import re, sys;
+lines = '\n'.join([line for line in sys.stdin]);
+matches = re.findall(r'\n## (.*)\n[\s\S]+?\n([a-zA-Z_-]+):', lines);
+print('Available rules:\n');
+print('\n'.join(['{:25}{}'.format(*reversed(match)) for match in matches]));
 endef
 export PRINT_HELP_PYSCRIPT
 
 help:
-	@$(PYTHON_INTERPRETER) -c "${PRINT_HELP_PYSCRIPT}" < $(MAKEFILE_LIST)
+	@$(PY) -c "$${PRINT_HELP_PYSCRIPT}" < $(MAKEFILE_LIST)
