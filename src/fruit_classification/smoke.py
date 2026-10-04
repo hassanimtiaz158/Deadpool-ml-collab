@@ -67,7 +67,7 @@ def main() -> None:
     metrics = evaluate(result, params, progress=False)
 
     smoke = {
-        "n_train": metrics["test"]["n_samples"],
+        "n_test": metrics["test"]["n_samples"],
         "test_accuracy": metrics["test"]["accuracy"],
         "test_macro_f1": metrics["test"]["macro_f1"],
         "model": metrics["provenance"]["model"],
