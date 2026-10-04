@@ -84,8 +84,7 @@ def _hidden_layers(cfg: dict[str, Any]) -> tuple[int, ...]:
         isinstance(value, (list, tuple))
         and len(value) > 0
         and all(
-            isinstance(v, Integral) and not isinstance(v, bool) and v > 0
-            for v in value
+            isinstance(v, Integral) and not isinstance(v, bool) and v > 0 for v in value
         )
     )
     if not valid:
@@ -121,7 +120,9 @@ def _build(name: str, cfg: dict[str, Any], seed: int) -> Any:
             random_state=seed,
         )
     if name in ("random_forest", "extra_trees"):
-        cls = RandomForestClassifier if name == "random_forest" else ExtraTreesClassifier
+        cls = (
+            RandomForestClassifier if name == "random_forest" else ExtraTreesClassifier
+        )
         return cls(
             n_estimators=_number(cfg, "n_estimators", 200, integer=True),
             max_depth=_number(cfg, "max_depth", None, integer=True, allow_none=True),
