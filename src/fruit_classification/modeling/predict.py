@@ -57,7 +57,8 @@ def predict_images(
 
 def predict_from_zip(members: list[str], model=None, feature_cfg: dict | None = None) -> list[str]:
     """Classify images identified by their path inside the raw dataset ZIP."""
-    with zipfile.ZipFile(config.DATASET_ZIP) as archive:
+    zip_path = config.dataset_zip()
+    with zipfile.ZipFile(zip_path) as archive:
         images = []
         for member in members:
             with archive.open(member) as handle:
