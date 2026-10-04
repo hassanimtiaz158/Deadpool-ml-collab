@@ -168,7 +168,7 @@ def compare(
         row.update({f"val_{k}": round(v, 6) for k, v in val.items()})
         row.update({f"test_{k}": round(v, 6) for k, v in test.items()})
         rows.append(row)
-        frame = _write_checkpoint(rows)
+        # frame = _write_checkpoint(rows)
 
         if verbose:
             print(

@@ -13,10 +13,8 @@ import time
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 
 from fruit_classification import config, dataset
-from fruit_classification.features import feature_dim
 
 INTERIM_SUBDIR = config.INTERIM_DIR
 

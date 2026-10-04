@@ -8,9 +8,9 @@ while still letting ``dvc pull`` be the only way data enters the repo.
 from __future__ import annotations
 
 import zipfile
+from collections.abc import Iterable, Iterator, Sequence
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
-from typing import Iterable, Iterator, Sequence
 
 import numpy as np
 import pandas as pd

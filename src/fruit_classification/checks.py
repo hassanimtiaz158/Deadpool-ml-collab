@@ -14,7 +14,6 @@ import json
 import sys
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 from fruit_classification import config, dataset
